@@ -20,16 +20,22 @@ fig-dpi: 300
 
 {{< pagebreak >}}
 
-## Introduction
+### Introduction
 
 Spatial data is an important component of decision-making, providing utility to disciplines including public health, urban planning, and disaster management. Across all domains, the choice of spatial units in analysis can change the patterns that emerge, influencing both the conclusions drawn from data and the decisions based on them. This issue, known as the Modifiable Areal Unit Problem (MAUP), pervades spatial analysis and must be carefully managed. The MAUP, first described by Gehlke and Biehl [-@gehlke1934a], is manifested in two ways: the scale issue, where patterns are emphasized or suppressed based on the spatial scale of areal units, and the boundary issue, where data are separated by arbitrary borders which often have no relation to the spatial processes being investigated.
 
 GIS software enables users to create and manipulate spatial data with ease. With a rapidly-increasing user base, more people than ever have the ability to analyze and present geographic data. In public policy, Census geographies are commonly used due to their ubiquity and legal recognition. However, there are countless ways to aggregate data, depending on the pattern being analyzed and the context of its use. This paper will explore different methods for defining spatial units and their impact on observed patterns, using 311 calls for service in Baltimore, Maryland, as a case study.
 
-## Data sources
+### Data sources
 
 Baltimore City makes historic 3-1-1 customer service requests available via their Open Baltimore data portal as an Esri Feature Service. This paper will focus on the "311 Customer Service Requests 2024" dataset [@baltimore_311_2024], as it is the most recent complete calendar year at the time of publishing. U.S. Census Bureau administrative units, including Census tracts [@uscensus2020], will be included the comparison of spatial units, as well as providing a framework from which to build novel areal units. In addition, Baltimore City maintains Neighborhood Statistical areas [@baltimore_nsa_2024], which will be used as a standalone spatial unit as well as a starting point for the creation of novel units.
 
-{{< pagebreak >}}
+### Methods
 
-## References
+While there is much research available regarding the effect of the MAUP across various existing administrative units, less attention has been given to spatial units developed to analyze more specific spatial processes. R Statistical Software [@rlang2024] and ArcGIS Pro [@esri_arcgis_2022] will be used to generate novel aggregation units, which units will be used to summarize 3-1-1 calls for service. These units will include the traditional administrative boundaries, which will then be manipulated via geoprocessing tools such as centroids, buffers, and isochrones. In addition, tessellations will be generated across the region to facilitate cell-based analysis. Descriptive statistics and geographic distributions created by each of the spatial units will be compared, allowing for a complete examination of the effectiveness of each type of aggregation as it relates to the spatial patterns of calls for service.
+
+### Deliverable
+
+The goal for this independent study is, as mentioned previously, a research paper suitable for publishing in an academic journal. The paper will contain written comparison of numeric distributions, as well as thematic maps depicting the geographic distribution of 3-1-1 calls when aggregated into various spatial units. This work is scheduled to be carried out over the summer, with an estimated completion in late August-early September, 2025. Maintaining this timeline will allow the authors to collaborate and edit the written portion of the document before submission to a peer-reviewed journal.
+
+### References
