@@ -7,6 +7,7 @@ format:
     toc: false
 date: today
 bibliography: references.bib
+biblio-style: biblatex
 include-in-header: 
   text: |
     \usepackage{fvextra}
@@ -34,17 +35,35 @@ This analysis will explore different methods for defining novel spatial units an
 
 ### Data
 
-Baltimore City makes historic 3-1-1 customer service requests available via their Open Baltimore data portal as an Esri Feature Service. This paper will focus on the "311 Customer Service Requests 2024" dataset [@baltimore_311_2024], as it is the most recent complete calendar year at the time of publishing. U.S. Census Bureau administrative units, such as Census tracts [@uscensus2020], will be used as a framework from which to build novel areal units. In addition, Baltimore City maintains Neighborhood Statistical areas [@baltimore_nsa_2024], which will be used as a starting point for the creation of novel units.
+Baltimore City makes historic 3-1-1 customer service requests available via their Open Baltimore data portal as an Esri Feature Service. This paper will focus on the "311 Customer Service Requests 2024" dataset [@baltimore_311_2024], as it is the most recent complete calendar year at the time of publishing.The 3-1-1 call data are points features which include detailed attributes such as the type of request, the location of the service request, and the time of the request. In addition, the large sample size ($n = 1,081,620$) is well-suited for aggregation across the geography; it is unlikely that a spatial unit will have zero observations.
+
+In addition, Baltimore City Neighborhood Statistical areas [@baltimore_nsa_2024] will be used as a starting point for the creation of novel units. Internal-point centroids of these areas will be calculated to represent place names for further aggregation. These centroids allow for a point-based definition of neighborhoods as a starting point for creating custom spatial units, without depending on existing boundary definitions which exacerbate the zoning issue.
 
 ### Methods
 
-While there is much research available regarding the effect of the MAUP across various existing administrative units, less attention has been given to distinct geographic areas which are built as to not rely on predefined boundaries. R Statistical Software [@rlang2024] and ArcGIS Pro [@esri_arcgis_2022] will be used to generate novel aggregation units, which units will be used to summarize 3-1-1 calls for service. The latter two data sources mentioned above will be manipulated in order to minimize bias from the creation of their existing boundaries. For example, internal-point and bounding-box centroids will be created, to which data will be aggregated both inwards and outwards—this will minimize the influence of predefined spatial units. In addition, a tessellation will be computed across the region, which will provide raster-like spatial continuity.
+While there is much research available regarding the effect of the MAUP across various existing administrative units, less attention has been given to distinct geographic areas that do not rely on predefined boundaries. The existing Neighborhood Statistical Areas (NSAs) of Baltimore City will serve to define place names, but their boundaries will not be the focus of this work. Instead, the study will focus on creating new areal units using point-based methods and conceptualized areas. R Statistical Software [@rlang2024] and ArcGIS Pro [@esri_arcgis_2022] will be used to generate novel aggregation units, which will summarize 3-1-1 calls for service. These aggregation units, as described in @tbl-agg, will vary in size and configuration and will include buffer zones and Voronoi polygons around neighborhood centers, buffers around 3-1-1 activity zone centers, and tessellation grids across the Baltimore region.
 
-A sensitivity analysis will be conducted by comparing descriptive statistics, as well as geographic and numeric distributions, across each type of novel spatial unit. An examination of similarities and differences between the statistical parameters of the various spatial units will provide a comprehensive assessment of how each aggregation method affects the spatial patterns of calls for service.
+A sensitivity analysis will be conducted by comparing descriptive statistics, as well as geographic and numeric distributions, across each type of novel spatial unit. By examining how each areal unit summarizes the call data, the analysis will identify how different definitions of space influence the interpretation of geographic patterns: this will demonstrate how the building of spatial units can introduce the Modifiable Areal Unit Problem (MAUP), as different units may lead to varying results and conclusions based on the same data.
 
 ### Deliverable
 
-The goal for this independent study is, as mentioned previously, a research paper suitable for publishing in an academic journal. The paper will contain written comparison of numeric distributions, as well as thematic maps depicting the geographic distribution of 3-1-1 calls when aggregated into various spatial units. This work is scheduled to be carried out over the summer, with an estimated completion in late August–early September, 2025. Maintaining this timeline will allow the authors to collaborate and edit the written portion of the document before submission to a peer-reviewed journal.
+The goal for this independent study is to produce a research paper suitable for publication in an academic journal. This paper will focus on methods for creating novel spatial units for geographic analysis, specifically exploring techniques for defining new areal units that can provide more meaningful insights into spatial data. The study will investigate various spatial unit creation methods, including buffer-based approaches (both symmetrical and walkshed buffers), tessellation-based units (with different grid resolutions), and clustering methods (such as k-means clustering with varying numbers of clusters). Additionally, Voronoi polygons generated from existing neighborhood centers will be tested to assess their effectiveness in capturing spatial patterns. Detailed definitions of these areal units, including their specific characteristics and parameters, are outlined in @tbl-agg.
+
+A sensitivity analysis will compare how these spatial unit definitions affect the aggregation of 3-1-1 call data, exploring the impact of buffer and isochrone sizes, tessellation resolution, and clustering configurations. This sensitivity analysis will reveal how the choice of spatial unit can introduce the Modifiable Areal Unit Problem (MAUP) and how different spatial definitions can lead to varying interpretations of geographic phenomena.
+
+This work is scheduled to be carried out over the summer, with an estimated completion in late August–early September, 2025. Maintaining this timeline will allow the authors to collaborate and edit the written portion of the document before submission to a peer-reviewed journal.
+
+{{< pagebreak >}}
+
+| Extent | Method | Description |
+|-----------------|-----------------|-------------------------------------------|
+| Baltimore city NSA centroids | Symmetrical buffer | The creation of a simple buffer around each of the NSA centroids (which act as place names) relates to the distance-decay function of 3-1-1 calls–the events which occur closest to a neighborhood have a stronger influence than those which occur further away. |
+| Baltimore city NSA centroids | Walkshed buffer | By creating isochrones to better represent the pedestrian-scale distance from a neighborhood, the above symmetrical buffer can be extended. This method posits a different distance-decay function: one which considers physical barriers to movement for neighborhood residents. |
+| Baltimore city NSA centroids | Voronoi polygons | This method assigns each event to its nearest neighborhood center by creating polygons around NSA centroids. This approach assumes that 3-1-1 calls are only associated with the closest named neighborhood, and that each event only matters to one neighborhood. |
+| Baltimore city boundaries | Regular tessellation | By creating a regular pattern of grid cells across the entire region, the influence of social or political factors in existing boundaries can be mitigated. Because each cell is the same size and shape, it eliminates variability introduced by differences in area, shape, or population across existing spatial units. |
+| Baltimore city 3-1-1 call locations | Centers of 3-1-1 activity | In this method, k-means clustering is used to group 311 call data into activity zones based on geographic proximity. From these activity centers, a buffer can be computed to identify an area of influence of the cluster–this method suggests that 311 calls reflect the needs of people near the cluster, rather than being tied to specific place definitions. |
+
+: The novel spatial units to be compared. {#tbl-agg}
 
 {{< pagebreak >}}
 
