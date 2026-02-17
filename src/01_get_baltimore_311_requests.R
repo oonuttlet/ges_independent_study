@@ -95,3 +95,31 @@ table(all_cfs$SRStatus[!is.na(all_cfs$CloseDate)]) # Table of SRStatus values wh
 
 nrow(all_cfs[all_cfs$SRStatus != 'Closed (Duplicate)',]) # Count how many records remain after filtering all Closed (Duplicate) records
 
+# ========================================================
+# CREATE EXPORT FOR CLEANING
+# ========================================================
+
+all_cfs_trim <- all_cfs |> # Select only the fields necessary for analysis
+  dplyr::select(
+    SRRecordID,
+    ServiceRequestNum,
+    SRType,
+    CreatedDate,
+    SRStatus,
+    CloseDate,
+    StatusDate,
+    Agency,
+    Outcome,
+    Address,
+    Latitude,
+    Longitude,
+    geometry
+  )
+
+sf::st_write(obj = all_cfs_trim, # Write CfS data to the /data folder
+         dsn = "data/cfs_baci_2010_2025.gpkg",
+         layer = "all_ds_da_cfs_baci_2010_2025")
+
+sf::st_write(obj = md_counties, # Write county data to the /data folder
+         dsn = "data/cfs_baci_2010_2025.gpkg",
+         layer = "md_cnty_500k_2020")

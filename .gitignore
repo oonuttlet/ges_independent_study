@@ -47,3 +47,7 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Ignore everything in the data directory, but keep the folder itself
+/data/*
+!/data/.gitkeep
