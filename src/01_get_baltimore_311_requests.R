@@ -23,8 +23,9 @@ all_cfs <- bind_rows(cfs_2025,
                      cfs_2023,
                      cfs_2010_2022)
 
-cfs_sample <- sample_frac(all_cfs, 0.10)
+cfs_sample <- sample_frac(all_cfs, 0.10) |>
+  st_as_sf()
 
 ggplot(cfs_sample) +
-  geom_sf() +
+  geom_sf(mapping = aes(color = year(CreatedDate))) +
   theme_void()
