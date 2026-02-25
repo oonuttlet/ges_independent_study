@@ -1,8 +1,31 @@
-library(arcgislayers)
-library(sf)
-library(dplyr)
-library(lubridate)
-library(tigris)
+# ========================================================
+# Author: Harrison DeFord
+# Date: Feb 17, 2026
+# Title: 01 - Get Baltimore 311 Requests
+#
+# Description: This script is the first to be run in the series. It is designed to scrape
+# data from the Baltimore City Open Baltimore feature services containing dirty street
+# and dirty alley service requests. If the data has been downloaded from the public
+# data download, then it is duplicative. The user can run this script to download the same
+# data, but note that the data may have been updated by Baltimore City since the initial
+# analysis was performed.
+#
+# The script begins by iterating over the feature services that contain the data. It then
+# performs uniqueness, validity, missingness, and type checking. Finally, it selects only
+# necessary columns, to reduce data size and increase performance in later steps.
+#
+# To replicate the analysis exactly, this script should not be run, and instead data 
+# provided via the public data download should be used. This data was accessed on 
+# February 17, 2026. Because records (especially Date fields) can change as Baltimore City
+# updates CfS data in their 311 system, records fetched at a later date could impact the 
+# results of the following scripts. It is mainly provided for transparency in analysis.
+# ========================================================
+
+library(arcgislayers) # Harness ArcGIS Data Services
+library(sf) # Simple Features for R
+library(dplyr) # A Grammar of Data Manipulation
+library(lubridate) # Make Dealing With Dates a Little Easier
+library(tigris) # Load Census TIGER/Line Shapefiles
 
 # ========================================================
 # DATA INGESTION AND INITIAL CLEANING
