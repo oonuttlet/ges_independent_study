@@ -4,13 +4,33 @@
 # Title: 02 - Clean Baltimore 311 Requests
 #
 # This script takes the raw data returned from script 01 - Get Baltimore 311 Requests.
+# First, it removes trailing whitespace from records in Agency, to ensure that all
+# values are 'Solid Waste'. It capitalizes Address, amd converts Latitude and Longitude
+# to numeric.
+#
 # It then filters out records that have been marked as duplicate by Baltimore City
 # employees, which records have been determined to represent the same event. This 
 # cleaning step also handles most records with missing CloseDate values.
 #
 # It then handles cases where CloseDate is NA by replacing it with StatusDate, which
 # reflects the most recent time the CfS's status was updated. 
+#
+# Next, it geocodes records with missing geometries to ensure that every CfS has a 
+# point location. It extracts the Latitude and Longitude values from the geocoded
+# location. 
+#
+# Finally, it performs checks and reports class conformity, missingness numbers,
+# counts and proportions of values in non-unique fields, and investigates changes
+# in values over time.
 # ========================================================
+
+# ========================================================
+# INSTALL AND LOAD LIBRARIES
+# ========================================================
+
+package_missing <- setdiff(c("sf", "dplyr", "lubridate", "arcgisgeocode", "ggplot2"), installed.packages()) # Check for any missing required libraries
+
+install.packages(package_missing) # Install missing libraries
 
 library(sf) # Simple Features for R
 library(dplyr) # A Grammar of Data Manipulation
@@ -176,3 +196,6 @@ table(nchar(all_cfs_nodup_valid_geom$ServiceRequestNum))
 ggplot2::ggplot(all_cfs_nodup_valid_geom) + 
   ggplot2::geom_bar(aes(x = lubridate::year(CreatedDate), fill = as.factor(nchar(ServiceRequestNum))), stat = "count")
 
+st_write(all_cfs_nodup_valid_geom,
+         dsn = "data/cfs_baci_2010_2025.gpkg",
+         layer = "cleaned_ds_da_cfs_baci_2010_2025_v1")
