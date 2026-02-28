@@ -21,6 +21,14 @@
 # results of the following scripts. It is mainly provided for transparency in analysis.
 # ========================================================
 
+# ========================================================
+# INSTALL AND LOAD LIBRARIES
+# ========================================================
+
+package_missing <- setdiff(c("arcgislayers", "sf", "dplyr", "lubridate", "tigris"), installed.packages()) # Check for any missing required libraries
+
+install.packages(package_missing) # Install missing libraries
+
 library(arcgislayers) # Harness ArcGIS Data Services
 library(sf) # Simple Features for R
 library(dplyr) # A Grammar of Data Manipulation
