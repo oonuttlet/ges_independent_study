@@ -41,8 +41,25 @@ library(arcgisgeocode) # A Robust Interface to ArcGIS 'Geocoding Services'
 # READ IN DATA FROM SCRIPT 01
 # ========================================================
 
-all_cfs_trim <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg",
+all_cfs <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg",
                         layer = "all_ds_da_cfs_baci_2010_2025") # This data is created in Script 01, or downloaded from the public download
+
+all_cfs_trim <- all_cfs |> # Select only the fields necessary for analysis
+  dplyr::select(
+    SRRecordID,
+    ServiceRequestNum,
+    SRType,
+    CreatedDate,
+    SRStatus,
+    CloseDate,
+    StatusDate,
+    Agency,
+    Outcome,
+    Address,
+    Latitude,
+    Longitude,
+    geom
+  )
 
 summary(all_cfs_trim) # Check that data was properly read
 
@@ -91,7 +108,7 @@ md_multirole_locator <- arcgisgeocode::geocode_server(r"(https://mdgeodata.md.go
 
 all_cfs_nodup_empty_geocoded <- arcgisgeocode::geocode_addresses(single_line = all_cfs_nodup_empty_geom$Address, # Single-line geocoding with address field
                                                                  geocoder = md_multirole_locator) |> # Use MD Multirole Locator
-  sf::st_transform(4326)
+  sf::st_transform(2248)
 
 all_cfs_nodup_empty_bind <- all_cfs_nodup_empty_geom |>
   dplyr::mutate(geom = st_geometry(all_cfs_nodup_empty_geocoded)) |> # Overwrite (empty) geometry column with geocoded geometry
@@ -186,16 +203,17 @@ table(all_cfs_nodup_valid_geom$Agency); table(all_cfs_nodup_valid_geom$Agency) /
 
 # Check NAs in unique columns
 
-sum(is.na(all_cfs_nodup_valid_geom$SRRecordID))
-table(nchar(all_cfs_nodup_valid_geom$SRRecordID))
-ggplot2::ggplot(all_cfs_nodup_valid_geom) + 
+sum(is.na(all_cfs_nodup_valid_geom$SRRecordID))   # Check for NA values in SRRecordID
+table(nchar(all_cfs_nodup_valid_geom$SRRecordID)) # Check for changes in record length
+ggplot2::ggplot(all_cfs_nodup_valid_geom) +       # Plot record length over time, to check for patterns
   ggplot2::geom_bar(aes(x = lubridate::year(CreatedDate), fill = as.factor(nchar(SRRecordID))), stat = "count")
 
-sum(is.na(all_cfs_nodup_valid_geom$ServiceRequestNum))
-table(nchar(all_cfs_nodup_valid_geom$ServiceRequestNum))
-ggplot2::ggplot(all_cfs_nodup_valid_geom) + 
+sum(is.na(all_cfs_nodup_valid_geom$ServiceRequestNum))   # Check for NA values in ServiceRequestNum
+table(nchar(all_cfs_nodup_valid_geom$ServiceRequestNum)) # Check for changes in record length
+ggplot2::ggplot(all_cfs_nodup_valid_geom) +              # Plot record length over time, to check for patterns
   ggplot2::geom_bar(aes(x = lubridate::year(CreatedDate), fill = as.factor(nchar(ServiceRequestNum))), stat = "count")
 
-st_write(all_cfs_nodup_valid_geom,
+sf::st_write(all_cfs_nodup_valid_geom, # Write cleaned dataset out to geopackage for use in further computation
          dsn = "data/cfs_baci_2010_2025.gpkg",
-         layer = "cleaned_ds_da_cfs_baci_2010_2025_v1")
+         layer = "cleaned_ds_da_cfs_baci_2010_2025_v1",
+         append = FALSE)

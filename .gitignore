@@ -51,3 +51,6 @@ rsconnect/
 # Ignore everything in the data directory, but keep the folder itself
 /data/*
 !/data/.gitkeep
+
+# rJavaEnv folder
+rJavaEnv/

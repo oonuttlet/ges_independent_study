@@ -16,7 +16,7 @@
 #
 # To replicate the analysis exactly, this script should not be run, and instead data 
 # provided via the public data download should be used. This data was accessed on 
-# February 17, 2026. Because records (especially Date fields) can change as Baltimore City
+# March 7, 2026. Because records (especially Date fields) can change as Baltimore City
 # updates CfS data in their 311 system, records fetched at a later date could impact the 
 # results of the following scripts. It is mainly provided for transparency in analysis.
 # ========================================================
@@ -25,7 +25,7 @@
 # INSTALL AND LOAD LIBRARIES
 # ========================================================
 
-package_missing <- setdiff(c("arcgislayers", "sf", "dplyr", "lubridate", "tigris"), installed.packages()) # Check for any missing required libraries
+package_missing <- setdiff(c( "sf", "dplyr", "lubridate", "tigris"), installed.packages()) # Check for any missing required libraries
 
 install.packages(package_missing) # Install missing libraries
 
@@ -43,21 +43,25 @@ where_clause <- "SRType IN ('SW-Dirty Alley', 'SW-Dirty Street')" # Passing the 
 # Get records from 2025, 2024, and 2023, each of which are contained in their own Feature Services
 cfs_2025 <- arcgislayers::arc_read(r"(https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/311_Customer_Service_Requests_2025/FeatureServer/0)",
                      where = where_clause) |> 
-  sf::st_drop_geometry() |> # Incoming geometry does not have a CRS attached, so cannot be reprojected. We will drop and re-create from latitude and longitude
-  sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE) |>
-  dplyr::mutate(HashedRecord = "") # This column is an unknown type to R, and will raise issues later on
+  sf::st_drop_geometry() |>                                                        # Incoming geometry does not have a CRS attached, so cannot be reprojected. We will drop and re-create from latitude and longitude
+  sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE) |> # Create points from Latitude and Longitude
+  sf::st_transform(2248) |>                                                        # Project to EPSG:2248; NAD83 / Maryland (ftUS)
+  dplyr::mutate(HashedRecord = "")                                                 # This column is an unknown type to R, and will raise issues later on
 
 cfs_2024 <- arcgislayers::arc_read(r"(https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/311_Customer_Service_Requests_2024/FeatureServer/0)",
-                     where = where_clause)
+                     where = where_clause) |>
+  sf::st_transform(2248) # Project to EPSG:2248; NAD83 / Maryland (ftUS)
 cfs_2023 <- arcgislayers::arc_read(r"(https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/311_Customer_Service_Requests_2023/FeatureServer/0)",
-                     where = where_clause)
+                     where = where_clause) |>
+  sf::st_transform(2248) # Project to EPSG:2248; NAD83 / Maryland (ftUS)
 
 # Get records from 2010-2022, which are layers in the same Feature Service
 cfs_2010_2022 <- lapply(0:12, \(x) {yr <- x + 2010 # Create year variable for debug messages
                                     dat <- try(
                                              arcgislayers::arc_read(
                                                paste0(r"(https://services1.arcgis.com/UWYHeuuJISiGmgXx/ArcGIS/rest/services/311_Customer_Service_Requests_Yearly/FeatureServer/)", x),
-                                                   where = where_clause)
+                                                   where = where_clause) |>
+                                               sf::st_transform(2248) # Project to EPSG:2248; NAD83 / Maryland (ftUS)
                                     )
                                     print(paste0(yr, ": ", nrow(dat), " obs"))
                                     return(dat)
@@ -96,7 +100,7 @@ summary(nchar(all_cfs$ServiceRequestNum))  # See the lengths of ServiceRequestNu
 md_counties <- tigris::counties(state = "MD", # Get all counties in Maryland
                                     cb = FALSE,
                                     year = 2020) |>
-  sf::st_transform(4326) # Project county boundaries to match CfS records
+  sf::st_transform(2248) # Project county boundaries to match CfS records
 
 balt_boundaries <- md_counties[md_counties$GEOID == '24510',] # Filter counties to only Baltimore City (GEOID 24510)
 
@@ -130,27 +134,12 @@ nrow(all_cfs[all_cfs$SRStatus != 'Closed (Duplicate)',]) # Count how many record
 # CREATE EXPORT FOR CLEANING
 # ========================================================
 
-all_cfs_trim <- all_cfs |> # Select only the fields necessary for analysis
-  dplyr::select(
-    SRRecordID,
-    ServiceRequestNum,
-    SRType,
-    CreatedDate,
-    SRStatus,
-    CloseDate,
-    StatusDate,
-    Agency,
-    Outcome,
-    Address,
-    Latitude,
-    Longitude,
-    geometry
-  )
-
-sf::st_write(obj = all_cfs_trim, # Write CfS data to the /data folder
+sf::st_write(obj = all_cfs, # Write CfS data to the /data folder
          dsn = "data/cfs_baci_2010_2025.gpkg",
-         layer = "all_ds_da_cfs_baci_2010_2025")
+         layer = "all_ds_da_cfs_baci_2010_2025",
+         append = FALSE)
 
 sf::st_write(obj = md_counties, # Write county data to the /data folder
          dsn = "data/cfs_baci_2010_2025.gpkg",
-         layer = "md_cnty_500k_2020")
+         layer = "md_cnty_500k_2020",
+         append = FALSE)
