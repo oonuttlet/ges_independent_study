@@ -26,13 +26,14 @@
 # INSTALL AND LOAD LIBRARIES
 # ========================================================
 
-package_missing <- setdiff(c("arcgislayers", "sf", "dplyr"), installed.packages()) # Check for any missing required libraries
+package_missing <- setdiff(c("arcgislayers", "sf", "dplyr", "units"), installed.packages()) # Check for any missing required libraries
 
 install.packages(package_missing) # Install missing libraries
 
 library(arcgislayers) # Harness ArcGIS Data Services
 library(sf)           # Simple Features for R
 library(dplyr)        # A Grammar of Data Manipulation
+library(units)        # Measurement Units for R Vectors
 
 # ========================================================
 # GET NSA POLYGONS

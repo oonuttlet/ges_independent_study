@@ -28,12 +28,13 @@
 # INSTALL AND LOAD LIBRARIES
 # ========================================================
 
-package_missing <- setdiff(c("sf", "dplyr"), installed.packages()) # Check for any missing required libraries
+package_missing <- setdiff(c("sf", "dplyr", "units"), installed.packages()) # Check for any missing required libraries
 
 install.packages(package_missing) # Install missing libraries
 
 library(sf)           # Simple Features for R
 library(dplyr)        # A Grammar of Data Manipulation
+library(units)        # Measurement Units for R Vectors
 
 # ========================================================
 # READ CLEANED NSA DATA AND GET MEDIAN AREA
@@ -95,7 +96,7 @@ nsa_025mi_buffer <- sf::st_buffer(baci_nsa_2020_proj, 1320) # Buffer NSA areas b
 
 example_nsa <- "Hamilton" # Select one NSA as an example for plotting of geometry
 
-plot(nsa_05mi_buffer$geom[nsa_025mi_buffer$Name == example_nsa], border = "red") # Plot new unit, existing NSA, and other NSAs to check output
+plot(nsa_025mi_buffer$geom[nsa_025mi_buffer$Name == example_nsa], border = "red") # Plot new unit, existing NSA, and other NSAs to check output
 plot(baci_nsa_2020_proj$geom, border = "#dbdbdb", add = TRUE)
 plot(baci_nsa_2020_proj$geom[baci_nsa_2020_proj$Name == example_nsa], border = "black", lwd = 2, add = TRUE)
 
@@ -131,9 +132,9 @@ sf::st_write(nsa_geom_com, # Write center of mass (CoM) points to novel units ge
              layer = "baci_nsa_geom_center_of_mass",
              append = FALSE)
 
-sf::st_write(nsa_05mi_buffer, # Write buffered polygons to novel units geopackage
+sf::st_write(nsa_025mi_buffer, # Write buffered polygons to novel units geopackage
              dsn = "data/baci_nsa_2020_novel_units.gpkg",
-             layer = "baci_nsa_05mi_buffer",
+             layer = "baci_nsa_025mi_buffer",
              append = FALSE)
 
 sf::st_write(nsa_com_area_buffer, # Write buffered CoM points to novel units geopackage

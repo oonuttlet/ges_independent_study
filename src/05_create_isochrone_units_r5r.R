@@ -65,7 +65,8 @@ baci_network <- r5r::build_network(data_path = pbf_path) # Build network using d
 nsa_geom_com_isochrone <- r5r::isochrone(r5r_network = baci_network, # Create isochrones using network created previously
                                          origins = nsa_geom_com,     # Origins are center-of-mass points
                                          mode = "walk",              # Walking distance (not transit or driving)
-                                         cutoffs = 15)               # 15-minute cutoff, at a default speed of 3.6kph (2.24mph)
+                                         cutoffs = 15,               # 15-minute cutoff
+                                         walk_speed = 4.39)          # Walking speed of 4.39kph = 4.0 fps (per MUTCD)
 
 names(nsa_geom_com_isochrone) # Print names to see what the output object contains
 
@@ -73,6 +74,8 @@ nsa_geom_com_isochrone_wdata <- nsa_geom_com |>
   dplyr::mutate(geom = nsa_geom_com_isochrone$polygons) |> # Overwrite geom column with isochrone polygons
   dplyr::select(-id) |>                                    # Drop ID column, it is now unnecessary
   sf::st_transform(2248)                                   # Project back to EPSG:2248 for continuity with other units and CfS
+
+plot(nsa_geom_com_isochrone_wdata["Name"]) # Plot, colored by Name, to see polygon shapes
 
 # ========================================================
 # WRITE DATA TO GEOPACKAGE
