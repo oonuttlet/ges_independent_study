@@ -71,11 +71,11 @@ nsa_med_area_hex_fishnet <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gp
 nsa_025mi_buffer <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read buffered polygon areas
                                 layer = "baci_nsa_025mi_buffer")
 
-nsa_com_area_buffer <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read buffered center-of-mass areas
-                                   layer = "baci_nsa_center_of_mass_area_buffer")
+nsa_com_area_buffer <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read buffered point-on-surface areas
+                                   layer = "baci_nsa_on_surface_area_buffer")
 
-nsa_geom_com_isochrone <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read isochrone walksheds
-                                            layer = "baci_nsa_center_of_mass_isochrone")
+nsa_geom_surface_isochrone <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read isochrone walksheds
+                                            layer = "baci_nsa_on_surface_isochrone")
 
 # ========================================================
 # COUNT POINTS IN POLYGONS (ACROSS)
@@ -91,7 +91,7 @@ nsa_med_area_hex_fishnet_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_med
 
 nsa_025mi_buffer_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_025mi_buffer)
 nsa_com_area_buffer_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_com_area_buffer)
-nsa_geom_com_isochrone_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_geom_com_isochrone)
+nsa_geom_surface_isochrone_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_geom_surface_isochrone)
 
 # ========================================================
 # WRITE RESULTS TO GEOPACKAGE
@@ -122,7 +122,7 @@ sf::st_write(nsa_com_area_buffer_CfS, # Write buffered NSA center-of-mass with C
              layer = "baci_nsa_com_area_buffer_CfS",
              append = FALSE)
 
-sf::st_write(nsa_geom_com_isochrone_CfS, # Write isochrone polygons with CfS to results geopackage
+sf::st_write(nsa_geom_surface_isochrone_CfS, # Write isochrone polygons with CfS to results geopackage
              dsn = "data/baci_nsa_2020_novel_units_results.gpkg",
-             layer = "baci_nsa_geom_com_isochrone_CfS",
+             layer = "baci_nsa_geom_surface_isochrone_CfS",
              append = FALSE)

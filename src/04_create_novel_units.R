@@ -6,20 +6,23 @@
 # Description: This script will use the NSA polygons gathered and cleaned in
 # script 03 as the basis of "place" to create novel spatial units for aggregation.
 # The output of this script is six sets of spatial records: a square fishnet grid,
-# a hexagonal fishnet grid, geometric centroids of each NSA, center of mass points
+# a hexagonal fishnet grid, geometric centroids of each NSA, point-on-surface points
 # of each NSA, 0.5-mile buffered NSA polygons, and symmetrical buffers equivalent
 # to the median area of the NSA polygons.
 #
-# The script begins by reading the cleaned NSA data from script 03. It then computes the 
-# median polygon area, and creates the two fishnet grids covering the study area, and
-# filters out only those polygons which intersect with the NSA boundaries for across aggregation. 
-# It then creates the two sets of points: one using sf::st_centroid(), which uses the geographic 
-# boundaries of the polygons (which can lead to points outside of polygons in some cases); and one 
-# using sf::st_point_in_polygon(), which is the "center of mass" of the polygon and thus must
-# be inside the polygon boundaries. These two units will be used for inward aggregation.
-# Finally, the script creates the three sets of units used for outwards aggregation: it first 
-# buffers the NSA polygons by 0.5 miles using sf::st_buffer(); then it buffers the center-of-mass
-# points to create circles with the median area of the set of NSA polygons.
+# The script begins by reading the cleaned NSA data from script 03. It then
+# computes the median polygon area, and creates the two fishnet grids covering
+# the study area, and  filters out only those polygons which intersect with
+# the NSA boundaries for across aggregation. It then creates the two sets of
+# points: one using sf::st_centroid(), which uses the geographic boundaries
+# of the polygons (which can lead to points outside of polygons in some cases);
+# and one using sf::st_point_in_polygon(), which must be inside the polygon 
+# boundaries. These two units will be used for inward aggregation. Finally, the
+# script creates the three sets of units used for outwards aggregation: it first 
+# buffers the NSA polygons by 0.5 miles using sf::st_buffer(); then it buffers the
+# center-of-mass points to create circles with the median area of the set of NSA
+# polygons.
+
 #
 # After the new spatial units are created, they are written to a new geopackage.
 # ========================================================
@@ -78,14 +81,14 @@ plot(sf::st_geometry(nsa_med_area_hex_fishnet), lwd = 2, add = TRUE) # Plot NSA 
 # ========================================================
 
 # Geometric centroid
-nsa_geom_cent <- sf::st_centroid(baci_nsa_2020_proj) # Geometric centroids of NSA polygons
+nsa_geom_cent <- sf::st_centroid(baci_nsa_2020_proj) # Geometric center-of-gravity of NSA polygons
 
 #Center-of-mass
-nsa_geom_com <- sf::st_point_on_surface(baci_nsa_2020_proj) # Center of mass of NSA polygons
+nsa_geom_surface <- sf::st_point_on_surface(baci_nsa_2020_proj) # Point on NSA polygons, guaranteed to be on surface
 
 plot(baci_nsa_2020_proj$geom, border = "black")
 plot(nsa_geom_cent$geom, col = "red", pch = 19, cex = 0.5, add = TRUE)
-plot(nsa_geom_com$geom, col = "blue", pch = 19, cex = 0.5, add = TRUE) # Plot centroid vs. center of mass to see shift in position
+plot(nsa_geom_surface$geom, col = "blue", pch = 19, cex = 0.5, add = TRUE) # Plot center-of-gravity vs. point on surface to see shift in position
 
 # ========================================================
 # CREATE OUTWARDS AGGREGATION UNITS
@@ -103,10 +106,10 @@ plot(baci_nsa_2020_proj$geom[baci_nsa_2020_proj$Name == example_nsa], border = "
 # Point buffer equivalent to median area
 med_nsa_area_equiv_radius <- sqrt((med_nsa_area * 10763910.41671)/pi) # Convert median NSA area to sq. feet and convert area to radius 
 
-nsa_com_area_buffer <- sf::st_buffer(nsa_geom_com, med_nsa_area_equiv_radius) # Buffer center-of-mass points by computed radius
+nsa_surface_area_buffer <- sf::st_buffer(nsa_geom_surface, med_nsa_area_equiv_radius) # Buffer point-on-surface points by computed radius
 
-plot(nsa_geom_com$geom, pch = 19, cex = 0.5) # Plot center of mass points with buffered radius
-plot(nsa_com_area_buffer$geom, border = "red", add = TRUE)
+plot(nsa_geom_surface$geom, pch = 19, cex = 0.5) # Plot point-on-surface points with buffered radius
+plot(nsa_surface_area_buffer$geom, border = "red", add = TRUE)
 
 # ========================================================
 # WRITE AGGREGATION UNITS TO GPKG
@@ -127,9 +130,9 @@ sf::st_write(nsa_geom_cent, # Write geometric centroids to novel units geopackag
              layer = "baci_nsa_geom_centroid",
              append = FALSE)
 
-sf::st_write(nsa_geom_com, # Write center of mass (CoM) points to novel units geopackage
+sf::st_write(nsa_geom_surface, # Write point-on-surface points to novel units geopackage
              dsn = "data/baci_nsa_2020_novel_units.gpkg",
-             layer = "baci_nsa_geom_center_of_mass",
+             layer = "baci_nsa_geom_on_surface",
              append = FALSE)
 
 sf::st_write(nsa_025mi_buffer, # Write buffered polygons to novel units geopackage
@@ -137,7 +140,7 @@ sf::st_write(nsa_025mi_buffer, # Write buffered polygons to novel units geopacka
              layer = "baci_nsa_025mi_buffer",
              append = FALSE)
 
-sf::st_write(nsa_com_area_buffer, # Write buffered CoM points to novel units geopackage
+sf::st_write(nsa_surface_area_buffer, # Write buffered point-on-surface points to novel units geopackage
              dsn = "data/baci_nsa_2020_novel_units.gpkg",
-             layer = "baci_nsa_center_of_mass_area_buffer",
+             layer = "baci_nsa_on_surface_area_buffer",
              append = FALSE)

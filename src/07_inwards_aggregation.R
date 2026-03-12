@@ -5,7 +5,7 @@
 #
 # Description: This script will perform "inwards" aggregation of CfS calls to
 # point units. To do this, each CfS record is related to its nearest NSA core
-# point, both geometric centroids and center-of-mass points. Because inwards
+# point, both geometric centroids and point-on-surface points. Because inwards
 # aggregation can capture all points, even those far outside the study area,
 # the CfS calls are spatially filtered to include only those within 0.25 miles
 # of the Baltimore City boundaries.
@@ -63,7 +63,7 @@ build_convex_hull <- function(points, cores){
   cfs_convex_hull <- df_all_cores |>
     left_join(cfs_mult_nearest_core, by = "nearest_core") |>
     sf::st_as_sf() |>
-    sf::st_convex_hull() |> # Create convex hull wrapped around the CfS points for each core to define an "area of influence"
+    sf::st_convex_hull() |>                                            # Create convex hull wrapped around the CfS points for each core to define an "area of influence"
     sf::st_as_sf() |>
     dplyr::mutate(CfS_Count = replace(CfS_Count, is.na(CfS_Count), 0)) # Replace NA values with 0, because that means no points were closest to that core
 
@@ -75,11 +75,11 @@ return_points_w_CfS <- function(cores, hulls){
     dplyr::mutate(nearest_core = row_number()) # Create column containing the index of the core (row number in same order)
   
   hulls_CfS <- hulls |>
-    sf::st_drop_geometry() |>           # Drop geometry to speed up computation
+    sf::st_drop_geometry() |>              # Drop geometry to speed up computation
     dplyr::select(nearest_core, CfS_Count) # Select only ID and CfS count to avoid unnecessary columns
   
   cores_w_CfS <- df_all_cores |>
-    dplyr::left_join(hulls_CfS, by = "nearest_core") |>                   # Join previous dataframe on row index to relate counts to points
+    dplyr::left_join(hulls_CfS, by = "nearest_core") |>                # Join previous dataframe on row index to relate counts to points
     sf::st_as_sf()                                                     # Ensure that object is an sf object
   
   return(cores_w_CfS)
@@ -98,8 +98,8 @@ md_counties <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read MD count
 nsa_geom_cent <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read geometric NSA centroids
                              layer = "baci_nsa_geom_centroid")
 
-nsa_geom_com <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read NSA CoM points
-                            layer = "baci_nsa_geom_center_of_mass")
+nsa_geom_surface <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read NSA point-on-surface points
+                            layer = "baci_nsa_geom_on_surface")
 
 balt_boundaries <- md_counties[md_counties$GEOID == '24510',] # Filter counties to only Baltimore City (GEOID 24510)
 balt_boundaries_edge <- balt_boundaries |> 
@@ -116,10 +116,10 @@ nsa_geom_cent_hulls <- build_convex_hull(all_cfs_cleaned_edge, # Count points cl
 
 nsa_geom_cent_CfS <- return_points_w_CfS(nsa_geom_cent, nsa_geom_cent_hulls) # Append CfS counts to centroid points
 
-nsa_geom_com_hulls <- build_convex_hull(all_cfs_cleaned_edge, # Count points closest to each NSA geometric centroid and generate convex hulls
-                                         nsa_geom_com)
+nsa_geom_surface_hulls <- build_convex_hull(all_cfs_cleaned_edge, # Count points closest to each NSA point-on-surface and generate convex hulls
+                                            nsa_geom_surface)
 
-nsa_geom_com_CfS <- return_points_w_CfS(nsa_geom_com, nsa_geom_com_hulls) # Append CfS counts to CoM points
+nsa_geom_surface_CfS <- return_points_w_CfS(nsa_geom_surface, nsa_geom_surface_hulls) # Append CfS counts to point-on-surface points
 
 # ========================================================
 # WRITE RESULTS TO GEOPACKAGE
@@ -135,12 +135,12 @@ sf::st_write(nsa_geom_cent_CfS, # Write geometric centroid points with CfS to re
              layer = "baci_nsa_geom_cent_CfS",
              append = FALSE)
 
-sf::st_write(nsa_geom_com_hulls, # Write NSA center-of-mass convex hull with CfS to results geopackage
+sf::st_write(nsa_geom_surface_hulls, # Write NSA point-on-surface convex hull with CfS to results geopackage
              dsn = "data/baci_nsa_2020_novel_units_results.gpkg",
              layer = "baci_nsa_geom_com_hulls_CfS",
              append = FALSE)
 
-sf::st_write(nsa_geom_com_CfS, # Write NSA center-of-mass points with CfS to results geopackage
+sf::st_write(nsa_geom_surface_CfS, # Write NSA point-on-surface points with CfS to results geopackage
              dsn = "data/baci_nsa_2020_novel_units_results.gpkg",
-             layer = "baci_nsa_geom_com_CfS",
+             layer = "baci_nsa_geom_surface_CfS",
              append = FALSE)

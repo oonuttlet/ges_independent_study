@@ -25,9 +25,9 @@
 # BBBike OSM extract is stored, and builds a linear network from it. The center-of-mass
 # points created in script 04 are read as the origins for the isochrones.
 #
-# 15-minute isochrones are then calculated for each of the 279 NSA centers to define
+# 15-minute isochrones are then calculated for each of the 279 NSA point-on-surface cores to define
 # the "walkable distance" from the neighborhood core. The isochrone geometry is then 
-# combined with the tabular data from the center-of-mass points to create one polygon
+# combined with the tabular data from the point-on-surface points to create one polygon
 # object, which is then written to the novel spatial units geopackage.
 # ========================================================
 
@@ -55,25 +55,25 @@ options(java.parameters = '-Xmx2G') # Increase Java memory allocation
 
 pbf_path <- "data/r5r/" # Contains .pbf file extracted from BBBike.org
 
-nsa_geom_com <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read center-of-mass points from geopackage
-                            layer = "baci_nsa_geom_center_of_mass") |>
+nsa_geom_surface <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read center-of-mass points from geopackage
+                            layer = "baci_nsa_geom_on_surface") |>
   sf::st_transform(4326) |>                                              # Project to EPSG:4326 (WGS 1984) for compatibility with r5r
   dplyr::mutate(id = dplyr::row_number())                                # Create ID column for compatibility with r5r
 
 baci_network <- r5r::build_network(data_path = pbf_path) # Build network using data in the data/r5r folder
 
-nsa_geom_com_isochrone <- r5r::isochrone(r5r_network = baci_network, # Create isochrones using network created previously
-                                         origins = nsa_geom_com,     # Origins are center-of-mass points
-                                         mode = "walk",              # Walking distance (not transit or driving)
-                                         cutoffs = 15,               # 15-minute cutoff
-                                         walk_speed = 4.39)          # Walking speed of 4.39kph = 4.0 fps (per MUTCD)
+nsa_geom_surface_isochrone <- r5r::isochrone(r5r_network = baci_network, # Create isochrones using network created previously
+                                         origins = nsa_geom_surface,     # Origins are center-of-mass points
+                                         mode = "walk",                  # Walking distance (not transit or driving)
+                                         cutoffs = 15,                   # 15-minute cutoff
+                                         walk_speed = 3.84048)              # Walking speed of 3.84kph = 3.5 fps (per MUTCD, 2009)
 
 names(nsa_geom_com_isochrone) # Print names to see what the output object contains
 
-nsa_geom_com_isochrone_wdata <- nsa_geom_com |>
-  dplyr::mutate(geom = nsa_geom_com_isochrone$polygons) |> # Overwrite geom column with isochrone polygons
-  dplyr::select(-id) |>                                    # Drop ID column, it is now unnecessary
-  sf::st_transform(2248)                                   # Project back to EPSG:2248 for continuity with other units and CfS
+nsa_geom_com_isochrone_wdata <- nsa_geom_surface |>
+  dplyr::mutate(geom = nsa_geom_surface_isochrone$polygons) |> # Overwrite geom column with isochrone polygons
+  dplyr::select(-id) |>                                        # Drop ID column, it is now unnecessary
+  sf::st_transform(2248)                                       # Project back to EPSG:2248 for continuity with other units and CfS
 
 plot(nsa_geom_com_isochrone_wdata["Name"]) # Plot, colored by Name, to see polygon shapes
 
@@ -83,6 +83,6 @@ plot(nsa_geom_com_isochrone_wdata["Name"]) # Plot, colored by Name, to see polyg
 
 sf::st_write(nsa_geom_com_isochrone_wdata, # Write isochrones out to novel units geopackage
              dsn = "data/baci_nsa_2020_novel_units.gpkg",
-             layer = "baci_nsa_center_of_mass_isochrone",
+             layer = "baci_nsa_on_surface_isochrone",
              append = FALSE)
 
