@@ -66,7 +66,7 @@ nsa_geom_surface_isochrone <- r5r::isochrone(r5r_network = baci_network, # Creat
                                          origins = nsa_geom_surface,     # Origins are center-of-mass points
                                          mode = "walk",                  # Walking distance (not transit or driving)
                                          cutoffs = 15,                   # 15-minute cutoff
-                                         walk_speed = 3.84048)              # Walking speed of 3.84kph = 3.5 fps (per MUTCD, 2009)
+                                         walk_speed = 3.84048)           # Walking speed of 3.84kph = 3.5 fps (per MUTCD, 2009)
 
 names(nsa_geom_com_isochrone) # Print names to see what the output object contains
 

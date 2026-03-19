@@ -71,7 +71,7 @@ nsa_med_area_hex_fishnet <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gp
 nsa_025mi_buffer <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read buffered polygon areas
                                 layer = "baci_nsa_025mi_buffer")
 
-nsa_com_area_buffer <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read buffered point-on-surface areas
+nsa_surface_area_buffer <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read buffered point-on-surface areas
                                    layer = "baci_nsa_on_surface_area_buffer")
 
 nsa_geom_surface_isochrone <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read isochrone walksheds
@@ -90,7 +90,7 @@ nsa_med_area_hex_fishnet_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_med
 # ========================================================
 
 nsa_025mi_buffer_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_025mi_buffer)
-nsa_com_area_buffer_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_com_area_buffer)
+nsa_surface_area_buffer_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_surface_area_buffer)
 nsa_geom_surface_isochrone_CfS <- count_points_in_polygon(all_cfs_cleaned, nsa_geom_surface_isochrone)
 
 # ========================================================
@@ -117,9 +117,9 @@ sf::st_write(nsa_025mi_buffer_CfS, # Write buffered NSA polygons with CfS to res
              layer = "baci_nsa_025mi_buffer_CfS",
              append = FALSE)
 
-sf::st_write(nsa_com_area_buffer_CfS, # Write buffered NSA center-of-mass with CfS to results geopackage
+sf::st_write(nsa_surface_area_buffer_CfS, # Write buffered NSA center-of-mass with CfS to results geopackage
              dsn = "data/baci_nsa_2020_novel_units_results.gpkg",
-             layer = "baci_nsa_com_area_buffer_CfS",
+             layer = "baci_nsa_surface_area_buffer_CfS",
              append = FALSE)
 
 sf::st_write(nsa_geom_surface_isochrone_CfS, # Write isochrone polygons with CfS to results geopackage
