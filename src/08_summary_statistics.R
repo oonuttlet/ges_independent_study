@@ -29,6 +29,8 @@ library(sf)    # Simple Features for R
 library(dplyr) # A Grammar of Data Manipulation
 library(sfdep) # Spatial Dependence for Simple Features
 
+set.seed(2819)
+
 nsa_geom_cent_hulls <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units_results.gpkg",
                                    layer = "baci_nsa_geom_cent_hulls_CfS")
 
@@ -97,6 +99,7 @@ compute_spatial_stats <- function(sdf, count_col) {
     total_cfs   = total_val,
     mean_cfs    = mu,
     cv_cfs      = cv_val,
+    gini_cfs    = gini_val,
     min_cfs     = min_val,
     p10_cfs     = unname(quants[1]),
     p25_cfs     = unname(quants[2]),
