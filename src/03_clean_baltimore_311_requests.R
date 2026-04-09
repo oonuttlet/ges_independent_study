@@ -1,7 +1,7 @@
 # ========================================================
 # Author: Harrison DeFord
 # Date: Feb 17, 2026
-# Title: 02 - Clean Baltimore 311 Requests
+# Title: 03 - Clean Baltimore 311 Requests
 #
 # This script takes the raw data returned from script 01 - Get Baltimore 311 Requests.
 # First, it removes trailing whitespace from records in Agency, to ensure that all
@@ -36,6 +36,7 @@ library(sf) # Simple Features for R
 library(dplyr) # A Grammar of Data Manipulation
 library(lubridate) # Make Dealing With Dates a Little Easier
 library(arcgisgeocode) # A Robust Interface to ArcGIS 'Geocoding Services'
+library(ggplot2) # Create Elegant Data Visualisations Using the Grammar of Graphics
 
 # ========================================================
 # READ IN DATA FROM SCRIPT 01
@@ -116,104 +117,110 @@ all_cfs_nodup_empty_bind <- all_cfs_nodup_empty_geom |>
   sf::st_as_sf()                                                     # Ensure output is sf object
 
 all_cfs_nodup_valid_geom <- all_cfs_nodup |>
-  dplyr::filter(!sf::st_is_empty(geom)) |>                                               # From de-duplicated object, filter rows which have a geometry (saves on memory by avoiding storage)
-  dplyr::bind_rows(all_cfs_nodup_empty_bind) |>                                          # Bind geocoded rows to end of table to ensure that the entire dataset has valid geometry
-  mutate(Longitude = dplyr::case_when(is.na(Longitude) ~ sf::st_coordinates(geom)[,"X"], # Replace NA Longitude with extracted Longitude from geocoded record
+  dplyr::filter(!sf::st_is_empty(geom)) |>                                                      # From de-duplicated object, filter rows which have a geometry (saves on memory by avoiding storage)
+  dplyr::bind_rows(all_cfs_nodup_empty_bind) |>                                                 # Bind geocoded rows to end of table to ensure that the entire dataset has valid geometry
+  dplyr::mutate(Longitude = dplyr::case_when(is.na(Longitude) ~ sf::st_coordinates(geom)[,"X"], # Replace NA Longitude with extracted Longitude from geocoded record
                                       TRUE ~ Longitude),
-         Latitude = dplyr::case_when(is.na(Latitude) ~ sf::st_coordinates(geom)[,"Y"],   # Replace NA Latitude with extracted Latitude from geocoded record
+         Latitude = dplyr::case_when(is.na(Latitude) ~ sf::st_coordinates(geom)[,"Y"],          # Replace NA Latitude with extracted Latitude from geocoded record
                                      TRUE ~ Latitude)
   )
 
-plot(all_cfs_nodup_valid_geom$geom) # Plot geometry to check shape and CfS locations. Most records should have landed back in Baltimore City
+baci_nsa_2020_proj <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read Baltimore boundaries to spatially filter CfS
+                               layer = "cleaned_nsa_bnd_baci_2020_v1")
+
+all_cfs_nodup_valid_geom_baci <- all_cfs_nodup_valid_geom |>
+  sf::st_filter(baci_nsa_2020_proj) # Spatial filter of CfS to be within boundary
+  
+
+plot(all_cfs_nodup_valid_geom_baci$geom) # Plot geometry to check shape and CfS locations. All records should be in Baltimore City
 
 # ========================================================
 # INVESTIGATION OF CLEANED DATA
 # ========================================================
 
-library(ggplot2) # Create Elegant Data Visualisations Using the Grammar of Graphics
 options(scipen = 999) # Suppress scientific notation for plotting
 
 # Investigate distribution of date columns
 
-ggplot2::ggplot(all_cfs_nodup_valid_geom) +   # Distribution of CreatedDate
-  ggplot2::geom_bar(aes(x = as.Date(
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) +   # Distribution of CreatedDate
+  ggplot2::geom_bar(ggplot2::aes(x = as.Date(
     lubridate::floor_date(CreatedDate, "quarter")
   )), stat = "count") +
   ggplot2::labs(title = "Distribution of CreatedDate after cleaning", x = "CreatedDate", y = "Count of CfS") +
   ggplot2::scale_x_date(date_breaks = "2 years") +
   ggplot2::theme_minimal()
 
-summary(all_cfs_nodup_valid_geom$CreatedDate) # Summary of CreatedDate
+summary(all_cfs_nodup_valid_geom_baci$CreatedDate) # Summary of CreatedDate
 
-ggplot2::ggplot(all_cfs_nodup_valid_geom) +   # Distribution of CloseDate
-  ggplot2::geom_bar(aes(x = as.Date(
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) +   # Distribution of CloseDate
+  ggplot2::geom_bar(ggplot2::aes(x = as.Date(
     lubridate::floor_date(CloseDate, "quarter")
   )), stat = "count") +   
   ggplot2::labs(title = "Distribution of CloseDate after cleaning", x = "CloseDate", y = "Count of CfS") +
   ggplot2::scale_x_date(date_breaks = "2 years") +
   ggplot2::theme_minimal()
 
-summary(all_cfs_nodup_valid_geom$CloseDate)  # Summary of CloseDate
+summary(all_cfs_nodup_valid_geom_baci$CloseDate)  # Summary of CloseDate
 
-ggplot2::ggplot(all_cfs_nodup_valid_geom) +  # Distribution of StatusDate
-  ggplot2::geom_bar(aes(x = as.Date(
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) +  # Distribution of StatusDate
+  ggplot2::geom_bar(ggplot2::aes(x = as.Date(
     lubridate::floor_date(StatusDate, "quarter")
   )), stat = "count") +  
   ggplot2::labs(title = "Distribution of StatusDate after cleaning", x = "StatusDate", y = "Count of CfS") +
   ggplot2::scale_x_date(date_breaks = "2 years") +
   ggplot2::theme_minimal()
 
-summary(all_cfs_nodup_valid_geom$StatusDate) # Summary of StatusDate
+summary(all_cfs_nodup_valid_geom_baci$StatusDate) # Summary of StatusDate
 
 # Investigate distribution of numeric columns
 
-summary(all_cfs_nodup_valid_geom$Latitude)  # Summary of Latitude (should be around 39 for Maryland)
-summary(all_cfs_nodup_valid_geom$Longitude) # Summary of Longitude (should be around -76 for Maryland)
+summary(all_cfs_nodup_valid_geom_baci$Latitude)  # Summary of Latitude (should be around 39 for Maryland)
+summary(all_cfs_nodup_valid_geom_baci$Longitude) # Summary of Longitude (should be around -76 for Maryland)
 
 # Investigate distribution of character columns (non-unique)
 
-ggplot2::ggplot(all_cfs_nodup_valid_geom) + 
-  ggplot2::geom_bar(aes(x = SRType), stat = "count") # Distribution of SRType (should contain only SW-Dirty Street and SW-Dirty Alley)
-summary(all_cfs_nodup_valid_geom$SRType)             # Summary of SRType (since character, mostly just a class check)
-sum(is.na(all_cfs_nodup_valid_geom$SRType))          # Count NA values in SRType
-table(all_cfs_nodup_valid_geom$SRType); table(all_cfs_nodup_valid_geom$SRType) / nrow(all_cfs_nodup_valid_geom)
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) + 
+  ggplot2::geom_bar(ggplot2::aes(x = SRType), stat = "count") # Distribution of SRType (should contain only SW-Dirty Street and SW-Dirty Alley)
+summary(all_cfs_nodup_valid_geom_baci$SRType)             # Summary of SRType (since character, mostly just a class check)
+sum(is.na(all_cfs_nodup_valid_geom_baci$SRType))          # Count NA values in SRType
+table(all_cfs_nodup_valid_geom_baci$SRType); table(all_cfs_nodup_valid_geom_baci$SRType) / nrow(all_cfs_nodup_valid_geom_baci)
 
-ggplot2::ggplot(all_cfs_nodup_valid_geom) + 
-  ggplot2::geom_bar(aes(x = SRStatus), stat = "count")   # Distribution of SRStatus (should contain only Closed, Closed (Transferred), and New)
-summary(all_cfs_nodup_valid_geom$SRStatus)               # Summary of SRStatus (since character, mostly just a class check)
-sum(is.na(all_cfs_nodup_valid_geom$SRStatus))            # Count NA values in SRStatus
-table(all_cfs_nodup_valid_geom$SRStatus); table(all_cfs_nodup_valid_geom$SRStatus) / nrow(all_cfs_nodup_valid_geom)
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) + 
+  ggplot2::geom_bar(ggplot2::aes(x = SRStatus), stat = "count")   # Distribution of SRStatus (should contain only Closed, Closed (Transferred), and New)
+summary(all_cfs_nodup_valid_geom_baci$SRStatus)               # Summary of SRStatus (since character, mostly just a class check)
+sum(is.na(all_cfs_nodup_valid_geom_baci$SRStatus))            # Count NA values in SRStatus
+table(all_cfs_nodup_valid_geom_baci$SRStatus); table(all_cfs_nodup_valid_geom_baci$SRStatus) / nrow(all_cfs_nodup_valid_geom_baci)
 
-ggplot2::ggplot(all_cfs_nodup_valid_geom) +
-  ggplot2::geom_bar(aes(x = lubridate::year(CreatedDate),  # Distribution of Outcome (often null, so not reliable for cleaning)
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) +
+  ggplot2::geom_bar(ggplot2::aes(x = lubridate::year(CreatedDate),  # Distribution of Outcome (often null, so not reliable for cleaning)
                         fill = Outcome), stat = "count") +
   ggplot2::labs(title = "Temporal distribution of Outcome",
                 x = "Year",
                 y = "Count") +
   ggplot2::theme_minimal()
-summary(all_cfs_nodup_valid_geom$Outcome)                  # Summary of Outcome (since character, mostly just a class check)
-sum(is.na(all_cfs_nodup_valid_geom$Outcome))               # Count NA values in Outcome
-table(all_cfs_nodup_valid_geom$Outcome); table(all_cfs_nodup_valid_geom$Outcome) / nrow(all_cfs_nodup_valid_geom)
+summary(all_cfs_nodup_valid_geom_baci$Outcome)                  # Summary of Outcome (since character, mostly just a class check)
+sum(is.na(all_cfs_nodup_valid_geom_baci$Outcome))               # Count NA values in Outcome
+table(all_cfs_nodup_valid_geom_baci$Outcome); table(all_cfs_nodup_valid_geom_baci$Outcome) / nrow(all_cfs_nodup_valid_geom_baci)
 
-ggplot2::ggplot(all_cfs_nodup_valid_geom) + 
-  ggplot2::geom_bar(aes(x = Agency), stat = "count")  # Distribution of Agency (should always be Solid Waste)
-summary(all_cfs_nodup_valid_geom$Agency)              # Summary of Agency (since character, mostly just a class check)
-sum(is.na(all_cfs_nodup_valid_geom$Agency))           # Count NA values in Agency
-table(all_cfs_nodup_valid_geom$Agency); table(all_cfs_nodup_valid_geom$Agency) / nrow(all_cfs_nodup_valid_geom)
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) + 
+  ggplot2::geom_bar(ggplot2::aes(x = Agency), stat = "count")  # Distribution of Agency (should always be Solid Waste)
+summary(all_cfs_nodup_valid_geom_baci$Agency)              # Summary of Agency (since character, mostly just a class check)
+sum(is.na(all_cfs_nodup_valid_geom_baci$Agency))           # Count NA values in Agency
+table(all_cfs_nodup_valid_geom_baci$Agency); table(all_cfs_nodup_valid_geom_baci$Agency) / nrow(all_cfs_nodup_valid_geom_baci)
 
 # Check NAs in unique columns
 
-sum(is.na(all_cfs_nodup_valid_geom$SRRecordID))   # Check for NA values in SRRecordID
-table(nchar(all_cfs_nodup_valid_geom$SRRecordID)) # Check for changes in record length
-ggplot2::ggplot(all_cfs_nodup_valid_geom) +       # Plot record length over time, to check for patterns
-  ggplot2::geom_bar(aes(x = lubridate::year(CreatedDate), fill = as.factor(nchar(SRRecordID))), stat = "count")
+sum(is.na(all_cfs_nodup_valid_geom_baci$SRRecordID))   # Check for NA values in SRRecordID
+table(nchar(all_cfs_nodup_valid_geom_baci$SRRecordID)) # Check for changes in record length
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) +       # Plot record length over time, to check for patterns
+  ggplot2::geom_bar(ggplot2::aes(x = lubridate::year(CreatedDate), fill = as.factor(nchar(SRRecordID))), stat = "count")
 
-sum(is.na(all_cfs_nodup_valid_geom$ServiceRequestNum))   # Check for NA values in ServiceRequestNum
-table(nchar(all_cfs_nodup_valid_geom$ServiceRequestNum)) # Check for changes in record length
-ggplot2::ggplot(all_cfs_nodup_valid_geom) +              # Plot record length over time, to check for patterns
-  ggplot2::geom_bar(aes(x = lubridate::year(CreatedDate), fill = as.factor(nchar(ServiceRequestNum))), stat = "count")
+sum(is.na(all_cfs_nodup_valid_geom_baci$ServiceRequestNum))   # Check for NA values in ServiceRequestNum
+table(nchar(all_cfs_nodup_valid_geom_baci$ServiceRequestNum)) # Check for changes in record length
+ggplot2::ggplot(all_cfs_nodup_valid_geom_baci) +              # Plot record length over time, to check for patterns
+  ggplot2::geom_bar(ggplot2::aes(x = lubridate::year(CreatedDate), fill = as.factor(nchar(ServiceRequestNum))), stat = "count")
 
-sf::st_write(all_cfs_nodup_valid_geom, # Write cleaned dataset out to geopackage for use in further computation
+sf::st_write(all_cfs_nodup_valid_geom_baci, # Write cleaned dataset out to geopackage for use in further computation
          dsn = "data/cfs_baci_2010_2025.gpkg",
-         layer = "cleaned_ds_da_cfs_baci_2010_2025_v1",
+         layer = "cleaned_ds_da_cfs_baci_2010_2025_v2",
          append = FALSE)

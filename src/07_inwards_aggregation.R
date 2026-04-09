@@ -90,7 +90,7 @@ return_points_w_CfS <- function(cores, hulls){
 # ========================================================
 
 all_cfs_cleaned <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read cleaned CfS data
-                               layer = "cleaned_ds_da_cfs_baci_2010_2025_v1")
+                               layer = "cleaned_ds_da_cfs_baci_2010_2025_v2")
 
 md_counties <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read MD county boundaries
                            layer = "md_cnty_500k_2020")

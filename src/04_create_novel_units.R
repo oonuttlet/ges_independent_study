@@ -54,7 +54,7 @@ med_nsa_area <- median(baci_nsa_2020_proj$Area_sqkm) # Store median area as a me
 
 # Square fishnet
 
-nsa_med_area_square_fishnet <- sf::st_make_grid(x = sf::st_buffer(baci_nsa_2020_proj, 1320),        # To account for edge effects, buffer the NSA area by 0.25mi (1320ft)
+nsa_med_area_square_fishnet <- sf::st_make_grid(x = sf::st_buffer(baci_nsa_2020_proj, 1118),        # Equivalent to the half the side length of the square, this should roughly center the grid overhang on both sides of the study area
                                                 cellsize = units::as_units(med_nsa_area, "km2")) |> # Create grid cells across the area
   sf::st_as_sf() |>                                                                                 # Convert SFC to SF
   sf::st_filter(baci_nsa_2020_proj) |>                                                              # Filter cells which intersect with NSAs
@@ -66,7 +66,7 @@ plot(sf::st_geometry(nsa_med_area_square_fishnet), lwd = 2, add = TRUE) # Plot N
 
 # Hex fishnet
 
-nsa_med_area_hex_fishnet <- sf::st_make_grid(x = sf::st_buffer(baci_nsa_2020_proj, 1320), # To account for edge effects, buffer the NSA area by 0.25mi (1320ft)
+nsa_med_area_hex_fishnet <- sf::st_make_grid(x = sf::st_buffer(baci_nsa_2020_proj, 1387), # Equivalent to the circumcircle radius of the hexagon, this should roughly center the grid overhang on both sides of the study area
                                                 cellsize = units::as_units(med_nsa_area, "km2"),
                                              square = FALSE) |>                           # Create grid cells across the area
   sf::st_as_sf() |>                                                                       # Convert SFC to SF

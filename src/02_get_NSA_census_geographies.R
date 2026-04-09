@@ -1,7 +1,7 @@
 # ========================================================
 # Author: Harrison DeFord
 # Date: Mar 2, 2026
-# Title: 03 - Get NSA and Geographies
+# Title: 02 - Get NSA and Geographies
 #
 # Description: This script will scrape Neighborhood Statistical Area (NSA)
 # boundaries from the Open Baltimore feature services to form the basis of "place"

@@ -57,7 +57,7 @@ count_points_in_polygon <- function(points, polygons){
 # ========================================================
 
 all_cfs_cleaned <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read cleaned CfS data
-                               layer = "cleaned_ds_da_cfs_baci_2010_2025_v1")
+                               layer = "cleaned_ds_da_cfs_baci_2010_2025_v2")
 
 baci_nsa_2020 <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read NSA polygons
                              layer = "cleaned_nsa_bnd_baci_2020_v1")

@@ -68,7 +68,7 @@ nsa_geom_surface_isochrone <- r5r::isochrone(r5r_network = baci_network, # Creat
                                          cutoffs = 15,                   # 15-minute cutoff
                                          walk_speed = 3.84048)           # Walking speed of 3.84kph = 3.5 fps (per MUTCD, 2009)
 
-names(nsa_geom_com_isochrone) # Print names to see what the output object contains
+names(nsa_geom_surface_isochrone) # Print names to see what the output object contains
 
 nsa_geom_com_isochrone_wdata <- nsa_geom_surface |>
   dplyr::mutate(geom = nsa_geom_surface_isochrone$polygons) |> # Overwrite geom column with isochrone polygons
