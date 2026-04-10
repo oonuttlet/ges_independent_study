@@ -92,31 +92,22 @@ return_points_w_CfS <- function(cores, hulls){
 all_cfs_cleaned <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read cleaned CfS data
                                layer = "cleaned_ds_da_cfs_baci_2010_2025_v2")
 
-md_counties <- sf::st_read(dsn = "data/cfs_baci_2010_2025.gpkg", # Read MD county boundaries
-                           layer = "md_cnty_500k_2020")
-
 nsa_geom_cent <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read geometric NSA centroids
                              layer = "baci_nsa_geom_centroid")
 
 nsa_geom_surface <- sf::st_read(dsn = "data/baci_nsa_2020_novel_units.gpkg", # Read NSA point-on-surface points
                             layer = "baci_nsa_geom_on_surface")
 
-balt_boundaries <- md_counties[md_counties$GEOID == '24510',] # Filter counties to only Baltimore City (GEOID 24510)
-balt_boundaries_edge <- balt_boundaries |> 
-  sf::st_buffer(1320)
-
-all_cfs_cleaned_edge <- sf::st_filter(all_cfs_cleaned, balt_boundaries_edge) # Keep only points within 0.25mi of Baltimore boundaries, to handle edge effects
-
 # ========================================================
 # COUNT POINTS CLOSEST TO EACH NEIGHBORHOOD CORE
 # ========================================================
 
-nsa_geom_cent_hulls <- build_convex_hull(all_cfs_cleaned_edge, # Count points closest to each NSA geometric centroid and generate convex hulls
+nsa_geom_cent_hulls <- build_convex_hull(all_cfs_cleaned, # Count points closest to each NSA geometric centroid and generate convex hulls
                        nsa_geom_cent)
 
 nsa_geom_cent_CfS <- return_points_w_CfS(nsa_geom_cent, nsa_geom_cent_hulls) # Append CfS counts to centroid points
 
-nsa_geom_surface_hulls <- build_convex_hull(all_cfs_cleaned_edge, # Count points closest to each NSA point-on-surface and generate convex hulls
+nsa_geom_surface_hulls <- build_convex_hull(all_cfs_cleaned, # Count points closest to each NSA point-on-surface and generate convex hulls
                                             nsa_geom_surface)
 
 nsa_geom_surface_CfS <- return_points_w_CfS(nsa_geom_surface, nsa_geom_surface_hulls) # Append CfS counts to point-on-surface points

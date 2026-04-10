@@ -1,7 +1,7 @@
 # ========================================================
 # Author: Harrison DeFord
 # Date: Mar 7, 2026
-# Title: 07 - Aggregation Summary Statistics
+# Title: 08 - Aggregation Summary Statistics
 #
 # Description: This script will take the polygons created previously and
 # calculate summary statistics of the CfS counts recorded per polygon. The results
